@@ -116,11 +116,15 @@ function HVertex(pos, color) {
         if (this.h === null) {
             return [];
         }
-        
-        const current_vertex = this.h.next.head;
-        const neighbors = [];
 
+        const first_edge = this.h, neighbors = [];
+        let current_edge = first_edge;
+
+        do {
+            neighbors.push(current_edge.head);
+            current_edge = current_edge.prev.pair;
         
+        } while(current_edge !== first_edge)
 
         return neighbors;
     }
@@ -135,8 +139,20 @@ function HVertex(pos, color) {
         if (this.h === null) {
             return [];
         }
-        // TODO: Fill this in (this is very similar to getVertexNeighbors)
-        return [];
+
+        const first_edge = this.h;
+        let current_edge = first_edge;
+        const faces = [];
+
+        do {
+            if(current_edge.face)
+                faces.push(current_edge.face);
+
+            current_edge = current_edge.prev.pair;
+
+        } while(current_edge !== first_edge)
+
+        return faces;
     }
 
     /**
