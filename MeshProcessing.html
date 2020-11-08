@@ -1,0 +1,54 @@
+<html>
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<!--External Libraries!-->
+<!--<script type="text/javascript" src="js/gl-matrix.js"></script>!-->
+<script type="text/javascript" src = "ggslac/jslibs/dat.gui.min.js"></script>
+<script type="text/javascript" src = "ggslac/jslibs/gl-matrix-min.js"></script>
+<script type="text/javascript" src="ggslac/jslibs/webgl-utils.js"></script>
+<script type="text/javascript" src="ggslac/jslibs/webgl-debug.js"></script>
+
+<!--Our Scripts!-->
+<script src="ggslac/utils/blockloader.js"></script>
+<script src="ggslac/geometry/polymesh.js"></script>
+<script src="ggslac/geometry/basicmesh.js"></script>
+<script src="halfedgemesh.js"></script>
+<script src="ggslac/geometry/primitives3d.js"></script>
+<script src="ggslac/geometry/cameras3d.js"></script>
+<script src="ggslac/shaders/shaders.js"></script>
+<script src="ggslac/utils/simpledraw.js"></script>
+<script src="ggslac/viewers/basecanvas.js"></script>
+<script src="halfedgecanvas.js"></script>
+</head>
+
+<body>
+
+<table>
+<tr><td><h3>Mesh File</h3></td><td><input type = "file" id = "meshInput"></td></tr>
+</table>
+<canvas id="MainGLCanvas" style="border: none;" width="800" height="600"></canvas>
+
+
+<script>
+    var glcanvas = document.getElementById("MainGLCanvas");
+    glcanvas.addEventListener("contextmenu", function(e){ e.stopPropagation(); e.preventDefault(); return false; }); //Need this to disable the menu that pops up on right clicking
+    HalfEdgeCanvas(glcanvas, "ggslac/shaders/");
+
+    var meshInput = document.getElementById('meshInput');
+    var result = document.getElementById('text');
+    
+    meshInput.addEventListener('change', function(e) {
+        let reader = new FileReader();
+        reader.onload = function(e) {
+            let lines = e.target.result.split("\n");
+            glcanvas.mesh.loadFileFromLines(lines);
+            glcanvas.centerCamera();
+            requestAnimationFrame(glcanvas.repaint);
+        }
+        reader.readAsText(meshInput.files[0]);
+    });
+</script>
+
+</body>
+</html>
