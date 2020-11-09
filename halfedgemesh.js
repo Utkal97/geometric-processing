@@ -65,12 +65,14 @@ function HFace() {
         if (this.h === null) {
             return [];
         }
+
         let h = this.h.next;
         let vertices = [this.h.head];
         while (h != this.h) {
             vertices.push(h.head);
             h = h.next;
         }
+        
         return vertices;
     }
 
@@ -80,10 +82,25 @@ function HFace() {
      * @returns {float} The area of this face
      */
     this.getArea = function() {
-        let area = 0.0;
-        // TODO: Fill this in (you can use mini assignment 1 to help)
-        // Remember, there are n-2 triangles in an n-gon
 
+        let area = 0.0;
+        const vertices = this.getVertices();
+        const first_vertex = vec3.clone(vertices[0].pos);
+
+        for(let i=1; i<vertices.length-1; i++) {
+
+            const vert1 = vec3.clone(vertices[i].pos), vert2 = vec3.clone(vertices[i+1].pos);
+
+            let edge1 = vec3.create(), edge2 = vec3.create();
+            vec3.subtract(edge1, vert1, first_vertex);
+            vec3.subtract(edge2, vert2, first_vertex);
+
+            let cross_prod = vec3.create();
+            vec3.cross(cross_prod, edge1, edge2);
+
+            const current_area = vec3.length(cross_prod)/2;
+            area += current_area;
+        }
         return area;
     }
 
@@ -94,8 +111,12 @@ function HFace() {
      */
     this.getNormal = function() {
         let normal = vec3.create();
-        // TODO: Fill this in
         
+        const vertices = this.getVertices();
+        let edge1 = vec3.create(),edge2 = vec3.create();
+        vec3.subtract(edge1, vec3.clone(vertices[1].pos), vec3.clone(vertices[0].pos));
+        vec3.subtract(edge2, vec3.clone(vertices[2].pos), vec3.clone(vertices[0].pos));
+        vec3.cross(normal, edge1, edge2);
         return normal;
     }
 }
@@ -118,7 +139,7 @@ function HVertex(pos, color) {
         }
 
         const first_edge = this.h, neighbors = [];
-        let current_edge = first_edge;
+        let current_edge = this.h;
 
         do {
             neighbors.push(current_edge.head);
@@ -141,7 +162,7 @@ function HVertex(pos, color) {
         }
 
         const first_edge = this.h;
-        let current_edge = first_edge;
+        let current_edge = this.h;
         const faces = [];
 
         do {
@@ -156,16 +177,48 @@ function HVertex(pos, color) {
     }
 
     /**
+     * Compute the edge between vertex and its neighbor
+     * 
+     * @returns {HEdge} An edge object
+     */
+    this.getEdgeBetweenVertex = function(vertex) {
+        if(!this || !vertex)
+            return null;
+            
+        let current_edge = this.h, first_edge = this.h;
+
+        do {
+            if(vec3.exactEquals(vertex.pos, current_edge.head.pos))
+                return current_edge;
+            
+            current_edge = current_edge.prev.pair;
+        } while(current_edge !== first_edge)
+        return null;
+    }
+
+    /**
      * Compute the normal of this vertex as an area-weighted
      * average of the normals of the faces attached to this vertex
      * 
      * @returns {vec3} The estimated normal
      */
     this.getNormal = function() {
-        let normal = vec3.fromValues(1, 0, 0); // TODO: This is a dummy value
-        // TODO: Fill this in 
-        // Hint: use this.getAttachedFaces(), face.getArea(), and face.getNormal() to help
+        let normal = vec3.create();
+        
+        const faces = this.getAttachedFaces();
 
+        for(let face of faces) {
+            let face_area = face.getArea(), face_normal = face.getNormal();
+
+            const multiplier = vec3.fromValues(face_area, face_area, face_area);
+            vec3.multiply(face_normal, face_normal, multiplier);
+            vec3.add(normal, normal, face_normal);
+        }
+        
+        let number_of_faces = vec3.fromValues(faces.length, faces.length, faces.length);
+        vec3.divide(normal, normal, number_of_faces);
+
+        vec3.normalize(normal, normal);
         return normal;
     }
 }
@@ -361,15 +414,16 @@ function HedgeMesh() {
     /**
      * Move each vertex along its normal by a factor
      * 
-     * @param {float} fac Move each vertex position by this
-     *                    factor of its normal.
-     *                    If positive, the mesh will inflate.
-     *                    If negative, the mesh will deflate.
+     * @param {float} factor Move each vertex position by this
+     *                       factor of its normal.
+     *                       If positive, the mesh will inflate.
+     *                       If negative, the mesh will deflate.
      */
-    this.inflateDeflate = function(fac) {
-        // Loop through all the vertices in the mesh
-        for (vertex of this.vertices) {
-            // TODO: Fill this in
+    this.inflateDeflate = function(factor) {
+        
+        for (let vertex of this.vertices) {
+            
+            vec3.scaleAndAdd( vertex.pos, vertex.pos, vertex.getNormal(), factor);
         }
         this.needsDisplayUpdate = true;
     }
@@ -382,8 +436,69 @@ function HedgeMesh() {
      * @param {boolean} smooth If true, smooth.  If false, sharpen
      */
     this.laplacianSmoothSharpen = function(smooth) {
-        // TODO: Fill this in
 
+        let vertices = this.vertices;
+        let new_vertices_pos = [];                          //the mesh changes according to neighbors, 
+                                                            //so keeping another list
+
+        for(let vertex of vertices) {
+            
+            let new_vertex_pos = vec3.create();
+
+            const neighbours = vertex.getVertexNeighbors();
+            let sum_of_all_weights = 0,                     // SIGMA w_ij
+                sum_of_all_contributions = vec3.create();   //SIGMA (w_ij*P_j)
+
+            for(let neighbor of neighbours) {
+                const edge = vertex.getEdgeBetweenVertex(neighbor);
+
+                let vert1 = vec3.create(), vert2 = vec3.create();   //vertices on opposite of edge
+                vec3.copy(vert1, edge.prev.pair.head.pos);
+                vec3.copy(vert2, edge.pair.prev.pair.head.pos);
+
+
+                let edge1 = vec3.create(), edge2 = vec3.create();
+    
+                vec3.subtract(edge1, vertex.pos, vert1);
+                vec3.subtract(edge2, neighbor.pos, vert1);
+                const alpha = vec3.angle(edge1, edge2);             //angle btw edges made with vert1
+
+                vec3.subtract(edge1, vertex.pos, vert2);
+                vec3.subtract(edge2, neighbor.pos, vert2);
+                const beta = vec3.angle(edge1, edge2);              //angle btw edges made with vert2
+
+                const cot_alpha = Math.tan(alpha) <= 0 ? 1 : 1/Math.tan(alpha),
+                        cot_beta = Math.tan(beta) <= 0 ? 1 : 1/Math.tan(beta);
+
+                const current_weight = (cot_alpha + cot_beta) / 2;  //w_ij
+                sum_of_all_weights += current_weight;               //SIGMA(w_ij)
+
+                let current_nei_contribution = vec3.create();
+                vec3.scale(current_nei_contribution, neighbor.pos, current_weight); //w_ij*p_j
+
+                vec3.add(sum_of_all_contributions,                          //SIGMA (w_ij*p_ij)
+                        sum_of_all_contributions, current_nei_contribution);   
+
+                
+            }
+
+            vec3.scale(sum_of_all_contributions,                     //SIGMA(w_ij*p_ij) / SIGMA(w_ij)
+                        sum_of_all_contributions, 1/sum_of_all_weights);
+            
+            let delta_P = vec3.create();
+            vec3.subtract(delta_P, sum_of_all_contributions, vertex.pos);   //SIGMA(w_ij*p_ij) / SIGMA(w_ij) - P_i
+            
+            if(smooth)  //P_i + delta_P
+                vec3.scaleAndAdd(new_vertex_pos, vertex.pos, delta_P, 1);
+            else        //P_i - delta_P
+                vec3.scaleAndAdd(new_vertex_pos, vertex.pos, delta_P, -1);
+                
+            new_vertices_pos.push(new_vertex_pos);
+        }
+
+        for(let ind=0; ind<vertices.length; ind++) {                //Updating positions of new vertices
+            vec3.copy(vertices[ind].pos, new_vertices_pos[ind]);
+        }
         this.needsDisplayUpdate = true;
     }
 
