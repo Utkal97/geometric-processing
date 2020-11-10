@@ -7,10 +7,13 @@ In this assignment, I have implemented Mesh traversal functions, Geometric proce
 
 Requirements : Python, Browser
 
-1) Open powershell / Command prompt.
-2) Direct to the main directory in the shell.
+1) After cloning the Repository, open powershell / command prompt / terminal.
+2) Redirect to the directory in the shell.
 3) Type command : "python -m http.server" to start web server.
 4) In browser, open localhost:8000/MeshProcessing.html.
+5) Each mesh(model) is located in "/ggslac/meshes" subdirectory. You may load your own mesh of the format ".off".
+   Get the latest pack of meshes at: https://github.com/ctralie/ggslac/tree/1bfd4da14416d8d978fa8f74128628d3ca4cb2ee/meshes
+6) The operations are located on top right of the page, Laplacian smoothing is in Geometric Tasks menu.
 
 ## Implementation details -
 
