@@ -29,3 +29,12 @@ Inflate/Deflate the selected vertex along its normal by the given factor.
 
 ### Laplacian Smooth/Sharpen -
 Apply laplacion operator on the mesh. The approach followed was Curvature-flow Laplacian Smoothing (using Cotangent weights).
+
+## Instructions to use -
+
+Requirements : Python, Browser
+
+1) Open powershell / Command prompt.
+2) Direct to the main directory in the shell.
+3) Type command : "python -m http.server" to start web server.
+4) In browser, open localhost:8000/MeshProcessing.html.
