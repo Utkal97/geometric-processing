@@ -11,11 +11,11 @@ There are 3 classes implemented:-
 
 Member functions implemented -
 
-HFace
+#### HFace
 1) face.getEdges() :- Given a face, retrieve all the half-edges associated with it.
 2) face.getArea() :- Given a face, calculate area
 
-HVertex
+#### HVertex
 1) vertex.getVertexNeighbors() :- For a vertex, retrieve its neighboring vertices as a list of vec3.
 2) vertex.getAttachedFaces() :- For a vertex, retrieve the faces associated with it.
 3) vertex.getEdgeBetweenVertex(neighbour) :- For a vertex, retrieve the half-edge from given vertex to its neighbor.
@@ -23,8 +23,8 @@ HVertex
 
 Geometric Processing Functions -
 
-Inflate/Deflate - 
+### Inflate/Deflate - 
 Inflate/Deflate the selected vertex along its normal by the given factor.
 
-Laplacian Smooth/Sharpen -
+### Laplacian Smooth/Sharpen -
 Apply laplacion operator on the mesh. The approach followed was Curvature-flow Laplacian Smoothing (using Cotangent weights).
