@@ -488,9 +488,9 @@ function HedgeMesh() {
             let delta_P = vec3.create();
             vec3.subtract(delta_P, sum_of_all_contributions, vertex.pos);   //SIGMA(w_ij*p_ij) / SIGMA(w_ij) - P_i
             
-            if(smooth)  //P_i + delta_P
+            if(smooth)  //smooth => P_i + lambda*delta_P
                 vec3.scaleAndAdd(new_vertex_pos, vertex.pos, delta_P, 1);
-            else        //P_i - delta_P
+            else        //sharp  => P_i - lambda*delta_P
                 vec3.scaleAndAdd(new_vertex_pos, vertex.pos, delta_P, -1);
                 
             new_vertices_pos.push(new_vertex_pos);
@@ -564,7 +564,6 @@ function HedgeMesh() {
      *                    (should be between 0 and 1)
      */
     this.truncate = function(fac) {
-        // TODO: Fill this in
 
         this.needsDisplayUpdate = true;
     }
