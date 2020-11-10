@@ -1,5 +1,6 @@
 # Laplacian Operator on 3D Mesh
 
+Link to assignment: http://www.ctralie.com/Teaching/CS476_F2019/Assignments/LargeScale2_3DShapeModeling/
 In this assignment, I have implemented Mesh traversal functions, Geometric processing function.
 
 The mesh data structure used is Half-Edge Mesh. Each edge on a the mesh consitutes of 2 oppositely directed half-edges. These two half-edges lie on two adjacent faces of the edge.
